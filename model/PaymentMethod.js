@@ -4,12 +4,12 @@ const { model, Schema } = mongoose;
 const paymentMethodSchema = new Schema(
     {
         name: {
-            type: String,        // Field 'name' bertipe String
-            required: true,      // Field 'name' wajib diisi
-            unique: true,        // Nama metode pembayaran harus unik
+            type: String,
+            required: true,
+            unique: true,
         },
     },
-    { timestamps: true },     // Mengaktifkan timestamps untuk mencatat waktu pembuatan dan pembaruan data
+    { timestamps: true },
 );
 
 module.exports = model('PaymentMethod', paymentMethodSchema);

@@ -80,8 +80,6 @@ router.post('', async (req, res) => {
     }
 });
 
-
-
 // List capsters with filters and pagination
 router.post('/list', async (req, res, next) => {
     try {
@@ -145,7 +143,6 @@ router.post('/list', async (req, res, next) => {
         });
     }
 });
-
 
 // READ - Get all capsters or a single capster by ID
 router.get('/:id?', async (req, res, next) => {
@@ -238,7 +235,6 @@ router.put('/:id', isAuthenticated, async (req, res) => {
         });
     }
 });
-
 
 // DELETE - Delete a capster by ID
 router.delete('/:id', isAuthenticated, async (req, res, next) => {

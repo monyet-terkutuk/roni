@@ -8,7 +8,8 @@
   },
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "seed": "node seeders/seed.js"
   },
   "author": "monyet terkutuk",
   "license": "ISC",
