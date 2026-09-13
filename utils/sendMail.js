@@ -40,6 +40,15 @@ const sendMail = async (options) => {
 };
 
 const sendMailForgotPW = async (options) => {
+  if (!process.env.MJ_APIKEY_PUBLIC || !process.env.MJ_APIKEY_PRIVATE || !process.env.MJ_SENDER_EMAIL) {
+    console.log("\n=======================================================");
+    console.log("⚠️ Mailjet API Key belum diisi di config/.env!");
+    console.log(`🔑 LINK RESET PASSWORD (${options.email}):`);
+    console.log(options.resetUrl);
+    console.log("=======================================================\n");
+    return { status: "local_dev_mock", message: "Link reset diprint ke terminal konsol lokal" };
+  }
+
   const mailjet = Mailjet.apiConnect(
     process.env.MJ_APIKEY_PUBLIC,
     process.env.MJ_APIKEY_PRIVATE
@@ -61,9 +70,9 @@ const sendMailForgotPW = async (options) => {
         Subject: options.subject,
         TextPart: options.messsage,
         HTMLPart:
-          '<h3>Dear Users, This Email For Reset Your Password</h3><br />Please change your password after login!, your new password is: <b>"' +
-          options.password +
-          '"</b>',
+          '<h3>Reset Password RH Barbershop</h3><br />Silakan klik link berikut untuk mereset kata sandi Anda (link ini berlaku selama 15 menit):<br /><a href="' +
+          options.resetUrl +
+          '">Reset Password</a><br /><br /><p>Jika Anda tidak meminta reset password, silakan abaikan email ini.</p>',
       },
     ],
   });

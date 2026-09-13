@@ -8,6 +8,8 @@ const { isAuthenticated, isAdmin } = require("../middleware/auth");
 const Validator = require("fastest-validator");
 const v = new Validator();
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
+const { sendMailForgotPW } = require("../utils/sendMail");
 
 // User register
 router.post("/register", async (req, res, next) => {
@@ -163,6 +165,119 @@ router.post("/login", async (req, res, next) => {
       },
       data: error.message,
     });
+  }
+});
+
+// Forgot password
+router.post("/forgot-password", async (req, res, next) => {
+  try {
+    const emailInput = req.body.email ? req.body.email.trim() : "";
+    if (!emailInput) {
+      return res.status(400).json({
+        code: 400,
+        status: "error",
+        message: "Email wajib diisi",
+      });
+    }
+
+    const user = await User.findOne({
+      email: { $regex: new RegExp(`^${emailInput.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") },
+    });
+    if (!user) {
+      return res.status(404).json({
+        code: 404,
+        status: "error",
+        message: "Pengguna dengan email ini tidak ditemukan",
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // Hash token to store in DB
+    user.resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    // Token expires in 15 minutes
+    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+
+    await user.save();
+
+    const frontendUrl = req.headers.origin || process.env.FRONTEND_URL || "http://localhost:3000";
+    const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+
+    const waPhone = "6285150589797";
+    const waMessage = `Halo Admin, berikut adalah link reset password akun RH Barbershop Anda (${user.email}):\n\n${resetUrl}\n\nLink ini berlaku selama 15 menit.`;
+    const waUrl = `https://api.whatsapp.com/send?phone=${waPhone}&text=${encodeURIComponent(waMessage)}`;
+
+    return res.status(200).json({
+      code: 200,
+      status: "success",
+      message: "Link reset password berhasil dibuat. Mengarahkan ke WhatsApp...",
+      waUrl,
+      resetUrl,
+    });
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
+  }
+});
+
+// Reset password
+router.post("/reset-password", async (req, res, next) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({
+        code: 400,
+        status: "error",
+        message: "Token dan password baru wajib diisi",
+      });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({
+        code: 400,
+        status: "error",
+        message: "Password minimal 8 karakter",
+      });
+    }
+
+    // Hash token from req.body to compare with hashed token in DB
+    const resetPasswordToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        code: 400,
+        status: "error",
+        message: "Token tidak valid atau telah kadaluwarsa",
+      });
+    }
+
+    // Set new password
+    user.password = bcrypt.hashSync(password, 10);
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    return res.status(200).json({
+      code: 200,
+      status: "success",
+      message: "Password berhasil diperbarui",
+    });
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 500));
   }
 });
 
