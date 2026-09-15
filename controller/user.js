@@ -205,19 +205,24 @@ router.post("/forgot-password", async (req, res, next) => {
 
     await user.save();
 
-    const frontendUrl = req.headers.origin || process.env.FRONTEND_URL || "http://localhost:3000";
+    const frontendUrl = (
+      req.headers.origin ||
+      process.env.FRONTEND_URL ||
+      "http://localhost:3000"
+    ).replace(/\/$/, "");
     const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
 
-    const waPhone = "6285150589797";
-    const waMessage = `Halo Admin, berikut adalah link reset password akun RH Barbershop Anda (${user.email}):\n\n${resetUrl}\n\nLink ini berlaku selama 15 menit.`;
-    const waUrl = `https://api.whatsapp.com/send?phone=${waPhone}&text=${encodeURIComponent(waMessage)}`;
+    await sendMailForgotPW({
+      email: user.email,
+      subject: "Reset Password RH Barbershop",
+      messsage: `Silakan buka link berikut untuk mereset kata sandi Anda (berlaku 15 menit):\n${resetUrl}`,
+      resetUrl,
+    });
 
     return res.status(200).json({
       code: 200,
       status: "success",
-      message: "Link reset password berhasil dibuat. Mengarahkan ke WhatsApp...",
-      waUrl,
-      resetUrl,
+      message: "Link reset password telah dikirim ke email Anda",
     });
   } catch (error) {
     return next(new ErrorHandler(error.message, 500));
