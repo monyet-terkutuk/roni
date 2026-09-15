@@ -4,8 +4,9 @@ const nodemailer = require("nodemailer");
 const Mailjet = require("node-mailjet");
 
 const LOGO_CID = "brand-logo@rhbarbershop";
-const LOGO_PATH = path.join(__dirname, "../image/brand-logo-white.png");
-const LOGO_PATH_FALLBACK = path.join(__dirname, "../image/brand-logo.png");
+// Pre-composited header (logo putih di hijau) — paling stabil di Gmail mobile
+const LOGO_PATH = path.join(__dirname, "../image/email-header-logo.png");
+const LOGO_PATH_FALLBACK = path.join(__dirname, "../image/brand-logo-white.png");
 
 const createGmailTransporter = () => {
   const user = process.env.SMTP_USER;
@@ -68,8 +69,8 @@ const buildEmailShell = ({ title, preheader, bodyHtml }) => {
       <td align="center">
         <table role="presentation" width="100%" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.06);">
           <tr>
-            <td style="background:#065f46;padding:28px 28px 18px;text-align:center;">
-              <img src="cid:${LOGO_CID}" alt="suma BARBER" width="180" height="180" style="display:inline-block;width:180px;max-width:180px;height:auto;border:0;outline:none;text-decoration:none;" />
+            <td style="background:#065f46;padding:0;text-align:center;line-height:0;font-size:0;">
+              <img src="cid:${LOGO_CID}" alt="suma BARBER" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" />
             </td>
           </tr>
           <tr>
