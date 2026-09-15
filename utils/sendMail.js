@@ -4,7 +4,8 @@ const nodemailer = require("nodemailer");
 const Mailjet = require("node-mailjet");
 
 const LOGO_CID = "brand-logo@rhbarbershop";
-const LOGO_PATH = path.join(__dirname, "../image/brand-logo.png");
+const LOGO_PATH = path.join(__dirname, "../image/brand-logo-white.png");
+const LOGO_PATH_FALLBACK = path.join(__dirname, "../image/brand-logo.png");
 
 const createGmailTransporter = () => {
   const user = process.env.SMTP_USER;
@@ -31,13 +32,19 @@ const escapeHtml = (value) =>
     .replace(/"/g, "&quot;");
 
 const getLogoAttachment = () => {
-  if (!fs.existsSync(LOGO_PATH)) {
+  const logoPath = fs.existsSync(LOGO_PATH)
+    ? LOGO_PATH
+    : fs.existsSync(LOGO_PATH_FALLBACK)
+      ? LOGO_PATH_FALLBACK
+      : null;
+
+  if (!logoPath) {
     return null;
   }
 
   return {
     filename: "brand-logo.png",
-    path: LOGO_PATH,
+    path: logoPath,
     cid: LOGO_CID,
     contentDisposition: "inline",
   };
@@ -61,13 +68,13 @@ const buildEmailShell = ({ title, preheader, bodyHtml }) => {
       <td align="center">
         <table role="presentation" width="100%" style="max-width:560px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.06);">
           <tr>
-            <td style="background:#065f46;padding:20px 28px;text-align:center;">
-              <img src="cid:${LOGO_CID}" alt="RH Barbershop" width="140" style="display:inline-block;max-width:140px;height:auto;border:0;outline:none;text-decoration:none;" />
+            <td style="background:#065f46;padding:28px 28px 18px;text-align:center;">
+              <img src="cid:${LOGO_CID}" alt="suma BARBER" width="180" height="180" style="display:inline-block;width:180px;max-width:180px;height:auto;border:0;outline:none;text-decoration:none;" />
             </td>
           </tr>
           <tr>
-            <td style="padding:8px 28px 0;text-align:center;">
-              <p style="margin:12px 0 0;font-size:20px;font-weight:700;color:#065f46;">${safeTitle}</p>
+            <td style="padding:4px 28px 0;text-align:center;">
+              <p style="margin:16px 0 0;font-size:20px;font-weight:700;color:#065f46;">${safeTitle}</p>
             </td>
           </tr>
           <tr>
@@ -78,7 +85,7 @@ const buildEmailShell = ({ title, preheader, bodyHtml }) => {
           <tr>
             <td style="padding:16px 28px 24px;border-top:1px solid #e5e7eb;font-size:12px;color:#9ca3af;text-align:center;line-height:1.5;">
               Hormat kami,<br />
-              <strong style="color:#065f46;">RH Barbershop</strong><br />
+              <strong style="color:#065f46;">suma BARBER</strong><br />
               <span style="color:#d1d5db;">Email otomatis — mohon tidak membalas pesan ini.</span>
             </td>
           </tr>
@@ -137,11 +144,11 @@ const sendMailForgotPW = async (options) => {
   const textBody =
     options.messsage ||
     `Halo,\n\n` +
-      `Kami menerima permintaan reset password untuk akun RH Barbershop Anda.\n` +
+      `Kami menerima permintaan reset password untuk akun suma BARBER Anda.\n` +
       `Silakan buka link berikut untuk membuat kata sandi baru (berlaku 15 menit):\n` +
       `${resetUrl}\n\n` +
       `Jika Anda tidak meminta reset password, abaikan email ini.\n\n` +
-      `Hormat kami,\nRH Barbershop`;
+      `Hormat kami,\nsuma BARBER`;
 
   const bodyHtml = `
     <p style="margin:0 0 12px;font-size:15px;line-height:1.55;color:#374151;">
@@ -179,7 +186,7 @@ const sendMailForgotPW = async (options) => {
 
   const htmlBody = buildEmailShell({
     title: "Reset Password",
-    preheader: "Link reset password RH Barbershop berlaku 15 menit.",
+    preheader: "Link reset password suma BARBER berlaku 15 menit.",
     bodyHtml,
   });
 
@@ -197,9 +204,9 @@ const sendMailForgotPW = async (options) => {
 
   try {
     const result = await transporter.sendMail({
-      from: `"RH Barbershop" <${from}>`,
+      from: `"suma BARBER" <${from}>`,
       to: options.email,
-      subject: options.subject || "Reset Password — RH Barbershop",
+      subject: options.subject || "Reset Password — suma BARBER",
       text: textBody,
       html: htmlBody,
       attachments: logoAttachment ? [logoAttachment] : [],
@@ -231,7 +238,7 @@ const sendAttendanceReminder = async (options) => {
 
   const textBody =
     `Halo ${name || "Pelanggan"},\n\n` +
-    `Ini pengingat kehadiran dari RH Barbershop.\n` +
+    `Ini pengingat kehadiran dari suma BARBER.\n` +
     `Booking Anda akan dimulai dalam sekitar 15 menit.\n\n` +
     `Detail booking:\n` +
     `- Tanggal: ${dateLabel}\n` +
@@ -239,7 +246,7 @@ const sendAttendanceReminder = async (options) => {
     `- Capster: ${capsterName || "-"}\n` +
     `- Layanan: ${serviceName || "-"}\n\n` +
     `Mohon hadir tepat waktu. Jika Anda sudah di lokasi atau booking dibatalkan, abaikan email ini.\n\n` +
-    `Hormat kami,\nRH Barbershop`;
+    `Hormat kami,\nsuma BARBER`;
 
   const bodyHtml = `
     <p style="margin:0 0 12px;font-size:15px;">Halo <strong>${safeName}</strong>,</p>
@@ -292,7 +299,7 @@ const sendAttendanceReminder = async (options) => {
   const logoAttachment = getLogoAttachment();
 
   return transporter.sendMail({
-    from: `"RH Barbershop" <${from}>`,
+    from: `"suma BARBER" <${from}>`,
     to: email,
     subject: `Pengingat Kehadiran — Booking pukul ${hourLabel}`,
     text: textBody,
