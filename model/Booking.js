@@ -55,6 +55,10 @@ const bookingSchema = new Schema(
             enum: ['Menunggu', 'Di Konfirmasi', 'Di Batalkan', 'Di Jadwalkan Ulang', 'Sedang Di Layani', 'Selesai', 'Tidak Hadir', 'Expired'],
             default: 'Menunggu',
         },
+        attendanceReminderSentAt: {
+            type: Date,
+            default: null,
+        },
     },
     { timestamps: true },
 );

@@ -2,6 +2,7 @@ const express = require('express');
 const Transaction = require('../model/Booking'); // Assuming the model is stored in the model directory
 const router = express.Router();
 const ExcelJS = require('exceljs');
+const { scheduleAttendanceReminder } = require('../jobs/attendanceReminder');
 
 // CREATE - Create a new booking/transaction
 router.post('', async (req, res) => {
@@ -36,6 +37,8 @@ router.post('', async (req, res) => {
         });
 
         await newTransaction.save();
+
+        scheduleAttendanceReminder(newTransaction._id);
 
         return res.status(201).json({
             code: 201,
@@ -283,6 +286,9 @@ router.put('/:id', async (req, res) => {
             });
         }
 
+        const prevDate = transaction.date ? new Date(transaction.date).getTime() : null;
+        const prevHour = transaction.hour;
+
         transaction.name = name || transaction.name;
         transaction.email = email || transaction.email;
         transaction.phone = phone || transaction.phone;
@@ -297,6 +303,15 @@ router.put('/:id', async (req, res) => {
         transaction.status = status || transaction.status;
 
         await transaction.save();
+
+        const nextDate = transaction.date ? new Date(transaction.date).getTime() : null;
+        const scheduleChanged =
+            (date !== undefined && nextDate !== prevDate) ||
+            (hour !== undefined && Number(transaction.hour) !== Number(prevHour));
+
+        if (scheduleChanged && !transaction.attendanceReminderSentAt) {
+            scheduleAttendanceReminder(transaction._id);
+        }
 
         return res.status(200).json({
             code: 200,
